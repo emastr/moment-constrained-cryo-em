@@ -88,12 +88,11 @@ def test_rot_slice_sph():
     
     thetas = jnp.zeros(100) + jnp.pi/2
     phis = jax.random.uniform(jax.random.PRNGKey(0), (100,)) * 2*jnp.pi
-    
-    thetas_rot, phis_rot = vmap(rot_sph, (0,0,None,None,None))(thetas, phis, -gamma, -beta, -alpha)
+    thetas_rot, phis_rot = vmap(rot_sph, (0,0,None,None,None))(thetas, phis, alpha, beta, gamma)
     
     vmap_args = (0,0,None,None,None,None)
     f_rot1 = vmap(eval_fourier, (0, None, None))(phis, fm_rot_slice, ms)
-    f_rot2 = vmap(eval_shell, vmap_args)(thetas_rot, phis_rot, fm, ls, ms, Lmax+1)
+    f_rot2 = vmap(eval_shell, vmap_args)(thetas_rot, phis_rot, fm, ls, ms, Lmax) # Used to say Lmax + 1
     assert jnp.max(jnp.abs(f_rot1-f_rot2))<EPS
 
 
