@@ -9,6 +9,7 @@ from single_degree_alignment import *
 EPS = 1e-10
 
 def main():
+    test_eval_fourier()
     test_ifft_shifted()
     test_fft_shifted()
     test_eval_shell()
@@ -23,7 +24,15 @@ def main():
     test_rigid_body_align()
     print("All tests passed.")
     
-
+def test_eval_fourier():
+    kmax = 10
+    L = 2*kmax+1
+    t = jnp.linspace(0, 2*jnp.pi, L+1)[:-1]
+    x = jnp.exp(jnp.sin(t))
+    xft = fft_shifted(x)
+    x1 = vmap(eval_fourier, (0, None, None))(t, xft, jnp.arange(-kmax, kmax+1))
+    x2 = ifft_shifted(xft)
+    assert jnp.max(jnp.abs(x1-x2))<EPS
 
 def test_ifft_shifted():
     K = 4

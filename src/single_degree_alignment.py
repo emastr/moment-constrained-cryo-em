@@ -13,7 +13,8 @@ from matplotlib import pyplot as plt
 
 @jit
 def eval_fourier(x, coef, ks):
-    return jnp.sum(coef * jnp.exp(1j * x * ks))
+    return jnp.sum(coef * jnp.exp(1j * x * ks)) / (2*jnp.max(ks)+1)
+
 
 @jit
 def ifft_shifted(f):
@@ -23,6 +24,17 @@ def ifft_shifted(f):
 def fft_shifted(f):
     return jnp.fft.fftshift(jnp.fft.fft(f))
 
+
+@jit 
+def sph_slice_to_vals(fm, Lmax):
+    return ifft_shifted(fm) * (2*Lmax+1)
+
+
+@jit
+def sph_vals_to_slice(f, Lmax):
+    return fft_shifted(f) / (2*Lmax+1)
+    
+
 def get_l_and_m(Lmax):
     ms = jnp.arange(-Lmax, Lmax+1).astype(jnp.int32)
     ls = jnp.ones_like(ms) * Lmax
@@ -31,6 +43,7 @@ def get_l_and_m(Lmax):
 def eval_shell(theta, phi, fm, ls, ms, L_max):
     # sph_harm uses different conventions for theta and phi
     theta, phi = phi, theta
+    #print(fm.shape)# == (2*L_max+1,)
     return jnp.sum(sph_harm(ms, ls, jnp.array([theta]), jnp.array([phi]), n_max=L_max+1) * fm)
 
 @jit
@@ -39,7 +52,8 @@ def rot_sph_harm(fm, alpha, d_beta, gamma, ms):
 
 @jit
 def rot_slice_sph(fm, alpha, d_beta, gamma, ms, sph_zero):
-    return rot_sph_harm(fm, alpha, d_beta, gamma, ms) * sph_zero
+    #return rot_sph_harm(fm, alpha, d_beta, gamma, ms) * sph_zero
+    return rot_sph_harm(fm, -gamma, d_beta.T.conj(), -alpha, ms) * sph_zero
 
 
 def get_slicing_weights(betas, ms, Lmax):
